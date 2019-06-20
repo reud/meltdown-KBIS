@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-import traceback
-import openpyxl
 import json
+import traceback
+from typing import List
+
+import openpyxl
 
 
 class Member(object):
@@ -51,6 +53,9 @@ class Group(object):
         """
         print(f'{self.name}: 残高{self.money}')
 
+    def get_dict(self) -> dict:
+        return {"name": self.name, "money": self.money}
+
 
 class Manager(object):
     """
@@ -65,7 +70,7 @@ class Manager(object):
         """
         workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
         yosan_sheet = workbook['予算']
-        self.memberlist: list = []
+        self.memberlist = []
         self.path = path
         FROM = 15
         TO = 21
@@ -74,7 +79,7 @@ class Manager(object):
             ws = workbook[str(i) + 'G']
             for mem in range(4, 30):
                 hisname = ws['B' + str(mem)].value
-                if (hisname):
+                if hisname:
                     bikou = ws['E' + str(mem)].value
                     hismoney = ws['C' + str(mem)].value
                     self.memberlist.append(Member(name=hisname, gen=i, money=hismoney if hismoney else 0,
@@ -82,7 +87,6 @@ class Manager(object):
 
         self.groups = []
         self.groups.append(Group('全体残高', yosan_sheet['D3'].value))
-
         self.groups.append(Group('設計班', yosan_sheet['L9'].value))
         self.groups.append(Group('翼班', yosan_sheet['L10'].value))
         self.groups.append(Group('コクピ班', yosan_sheet['L11'].value))
@@ -194,4 +198,6 @@ class Manager(object):
             print(traceback.format_exc())
 
     def get_json(self) -> str:
-        return json.dumps({"members": [m.get_dict() for m in self.memberlist] }, ensure_ascii=False).encode("utf-8")
+        return json.dumps(
+            {"members": [m.get_dict() for m in self.memberlist], "groups": [g.get_dict() for g in self.groups]},
+            ensure_ascii=False).encode("utf-8")
